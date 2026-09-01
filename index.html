@@ -1,0 +1,1065 @@
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Detectives Gráficos - Funciones Cuadráticas</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #dbeafe, #f8fafc);
+    min-height: 100vh;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.container {
+    background: white;
+    width: 100%;
+    max-width: 850px;
+    padding: 25px;
+    border-radius: 20px;
+    box-shadow: 0 12px 30px rgba(0,0,0,.12);
+    text-align: center;
+}
+
+h1 {
+    color: #1e293b;
+    margin-bottom: 5px;
+    font-size: 2rem;
+}
+
+.subtitle {
+    color: #64748b;
+    margin-bottom: 15px;
+}
+
+.top-bar {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.badge {
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-weight: bold;
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+.level {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.score {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.progress {
+    height: 10px;
+    background: #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.progress-bar {
+    height: 100%;
+    width: 0%;
+    background: #0284c7;
+    transition: width .3s;
+}
+
+.challenge {
+    background: #f8fafc;
+    padding: 12px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+}
+
+.challenge h2 {
+    font-size: 1.2rem;
+    color: #334155;
+}
+
+canvas {
+    width: 400px;
+    max-width: 100%;
+    border: 2px solid #cbd5e1;
+    border-radius: 10px;
+    background: white;
+    margin-bottom: 20px;
+}
+
+.options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.btn-option {
+    background: #f1f5f9;
+    border: 2px solid #cbd5e1;
+    padding: 14px;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #334155;
+    cursor: pointer;
+    transition: .2s;
+}
+
+.btn-option:hover:not(:disabled) {
+    background: #e0f2fe;
+    border-color: #0284c7;
+    transform: translateY(-2px);
+}
+
+.btn-option.correct {
+    background: #dcfce7 !important;
+    border-color: #22c55e !important;
+    color: #166534 !important;
+}
+
+.btn-option.incorrect {
+    background: #fee2e2 !important;
+    border-color: #ef4444 !important;
+    color: #991b1b !important;
+}
+
+.feedback {
+    min-height: 30px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-bottom: 12px;
+}
+
+.feedback.correct {
+    color: #15803d;
+}
+
+.feedback.incorrect {
+    color: #b91c1c;
+}
+
+/* EXPLICACIÓN */
+
+.explanation {
+    display: none;
+    background: #eff6ff;
+    border-left: 5px solid #0284c7;
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 10px;
+    text-align: left;
+}
+
+.explanation h3 {
+    color: #0369a1;
+    margin-bottom: 8px;
+}
+
+.explanation p {
+    color: #334155;
+    line-height: 1.5;
+}
+
+/* BOTONES */
+
+button.next,
+button.restart {
+    border: none;
+    padding: 12px 25px;
+    border-radius: 9px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+button.next {
+    background: #0284c7;
+}
+
+button.next:hover {
+    background: #0369a1;
+}
+
+button.restart {
+    background: #7c3aed;
+}
+
+.result {
+    display: none;
+    padding: 25px;
+}
+
+.result h2 {
+    color: #1e293b;
+    margin-bottom: 15px;
+}
+
+.result .big-score {
+    font-size: 3rem;
+    font-weight: bold;
+    color: #0284c7;
+    margin: 15px;
+}
+
+@media(max-width:600px) {
+
+    .options-grid {
+        grid-template-columns: 1fr;
+    }
+
+    canvas {
+        width: 100%;
+        height: auto;
+    }
+
+    h1 {
+        font-size: 1.5rem;
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div id="game">
+
+        <h1>🕵️‍♂️ Detectives Gráficos</h1>
+
+        <p class="subtitle">
+            Investiga la parábola y descubre sus secretos matemáticos.
+        </p>
+
+        <div class="top-bar">
+
+            <div class="badge level">
+                Nivel: <span id="levelName">Explorador</span>
+            </div>
+
+            <div class="badge">
+                Desafío <span id="round">1</span>/10
+            </div>
+
+            <div class="badge score">
+                ⭐ Puntaje: <span id="score">0</span>
+            </div>
+
+        </div>
+
+        <div class="progress">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div class="challenge">
+
+            <h2 id="question">
+                Analiza la parábola
+            </h2>
+
+        </div>
+
+        <canvas id="graphCanvas" width="400" height="400"></canvas>
+
+        <div class="options-grid" id="optionsContainer"></div>
+
+        <div id="feedback" class="feedback"></div>
+
+        <div id="explanation" class="explanation">
+
+            <h3>🔎 Pista del detective</h3>
+
+            <p id="explanationText"></p>
+
+        </div>
+
+        <button id="nextBtn" class="next" style="display:none;">
+            Siguiente desafío →
+        </button>
+
+    </div>
+
+    <div id="result" class="result">
+
+        <h2>🏆 Investigación terminada</h2>
+
+        <p>Has completado todos los desafíos.</p>
+
+        <div class="big-score">
+            <span id="finalScore">0</span>
+        </div>
+
+        <p id="finalMessage"></p>
+
+        <br>
+
+        <button class="restart" onclick="restartGame()">
+            🔄 Jugar nuevamente
+        </button>
+
+    </div>
+
+</div>
+
+
+<script>
+
+const canvas = document.getElementById("graphCanvas");
+const ctx = canvas.getContext("2d");
+
+const optionsContainer =
+    document.getElementById("optionsContainer");
+
+const feedbackEl =
+    document.getElementById("feedback");
+
+const explanation =
+    document.getElementById("explanation");
+
+const explanationText =
+    document.getElementById("explanationText");
+
+const nextBtn =
+    document.getElementById("nextBtn");
+
+const scoreEl =
+    document.getElementById("score");
+
+const roundEl =
+    document.getElementById("round");
+
+const levelName =
+    document.getElementById("levelName");
+
+const progressBar =
+    document.getElementById("progressBar");
+
+const questionEl =
+    document.getElementById("question");
+
+const game =
+    document.getElementById("game");
+
+const result =
+    document.getElementById("result");
+
+
+/* CONFIGURACIÓN */
+
+const TOTAL_ROUNDS = 10;
+
+let score = 0;
+let round = 1;
+let currentAnswer = "";
+let currentType = "";
+let roundActive = true;
+
+
+/* PLANO */
+
+const width = canvas.width;
+const height = canvas.height;
+
+const scale = 20;
+
+const originX = width / 2;
+const originY = height / 2;
+
+
+/* DIBUJAR PLANO */
+
+function drawGrid() {
+
+    ctx.clearRect(0,0,width,height);
+
+    ctx.strokeStyle = "#e2e8f0";
+    ctx.lineWidth = 1;
+
+    for(let x=0;x<=width;x+=scale){
+
+        ctx.beginPath();
+        ctx.moveTo(x,0);
+        ctx.lineTo(x,height);
+        ctx.stroke();
+
+    }
+
+    for(let y=0;y<=height;y+=scale){
+
+        ctx.beginPath();
+        ctx.moveTo(0,y);
+        ctx.lineTo(width,y);
+        ctx.stroke();
+
+    }
+
+    /* EJE X */
+
+    ctx.strokeStyle="#64748b";
+    ctx.lineWidth=2;
+
+    ctx.beginPath();
+    ctx.moveTo(0,originY);
+    ctx.lineTo(width,originY);
+    ctx.stroke();
+
+    /* EJE Y */
+
+    ctx.beginPath();
+    ctx.moveTo(originX,0);
+    ctx.lineTo(originX,height);
+    ctx.stroke();
+
+    /* NUMERACIÓN */
+
+    ctx.fillStyle="#64748b";
+    ctx.font="11px Arial";
+
+    for(let i=-10;i<=10;i++){
+
+        if(i===0) continue;
+
+        let px=originX+i*scale;
+
+        ctx.fillText(i,px-4,originY+15);
+
+        let py=originY-i*scale;
+
+        if(py>10 && py<height-5)
+            ctx.fillText(i,originX+5,py+4);
+    }
+
+}
+
+
+/* DIBUJAR PARÁBOLA */
+
+function drawParabola(a,b,c){
+
+    drawGrid();
+
+    ctx.strokeStyle="#2563eb";
+    ctx.lineWidth=3;
+
+    ctx.beginPath();
+
+    let first=true;
+
+    for(let pixelX=0;pixelX<=width;pixelX+=2){
+
+        const x=(pixelX-originX)/scale;
+
+        const y=a*x*x+b*x+c;
+
+        const pixelY=originY-y*scale;
+
+        if(pixelY < -1000 || pixelY > 1000){
+
+            first=true;
+            continue;
+        }
+
+        if(first){
+
+            ctx.moveTo(pixelX,pixelY);
+            first=false;
+
+        }else{
+
+            ctx.lineTo(pixelX,pixelY);
+
+        }
+
+    }
+
+    ctx.stroke();
+
+
+    /* VÉRTICE */
+
+    const xv=-b/(2*a);
+    const yv=a*xv*xv+b*xv+c;
+
+    const vx=originX+xv*scale;
+    const vy=originY-yv*scale;
+
+    if(vx>=0 && vx<=width && vy>=0 && vy<=height){
+
+        ctx.fillStyle="#dc2626";
+
+        ctx.beginPath();
+        ctx.arc(vx,vy,5,0,Math.PI*2);
+        ctx.fill();
+
+        ctx.fillStyle="#991b1b";
+        ctx.font="bold 12px Arial";
+
+        ctx.fillText(
+            `V(${clean(xv)}, ${clean(yv)})`,
+            vx+8,
+            vy-8
+        );
+    }
+
+}
+
+
+/* LIMPIAR DECIMALES */
+
+function clean(n){
+
+    return Math.round(n*100)/100;
+
+}
+
+
+/* ECUACIÓN */
+
+function formatEquation(a,b,c){
+
+    let result="f(x) = ";
+
+    if(a===1)
+        result+="x²";
+    else if(a===-1)
+        result+="-x²";
+    else
+        result+=`${a}x²`;
+
+    if(b>0)
+        result+=` + ${b===1?"":b}x`;
+
+    if(b<0)
+        result+=` - ${Math.abs(b)===1?"":Math.abs(b)}x`;
+
+    if(c>0)
+        result+=` + ${c}`;
+
+    if(c<0)
+        result+=` - ${Math.abs(c)}`;
+
+    return result;
+
+}
+
+
+/* RAÍCES */
+
+function calculateRoots(a,b,c){
+
+    const d=b*b-4*a*c;
+
+    if(d<0)
+        return [];
+
+    if(d===0)
+        return [-b/(2*a)];
+
+    return [
+        (-b-Math.sqrt(d))/(2*a),
+        (-b+Math.sqrt(d))/(2*a)
+    ];
+
+}
+
+
+/* FORMATO RAÍCES */
+
+function formatRoots(roots){
+
+    if(roots.length===0)
+        return "No tiene raíces reales";
+
+    if(roots.length===1)
+        return `x = ${clean(roots[0])}`;
+
+    return `x₁ = ${clean(roots[0])} ; x₂ = ${clean(roots[1])}`;
+
+}
+
+
+/* GENERAR OPCIONES */
+
+function generateOptions(correct, type, a,b,c){
+
+    let options=[correct];
+
+    let alternatives=[];
+
+
+    if(type==="vértice"){
+
+        const xv=-b/(2*a);
+        const yv=a*xv*xv+b*xv+c;
+
+        alternatives=[
+            `(${clean(xv+1)}, ${clean(yv)})`,
+            `(${clean(xv)}, ${clean(yv+1)})`,
+            `(${clean(-xv)}, ${clean(yv)})`
+        ];
+
+    }
+
+
+    if(type==="raíces"){
+
+        const roots=calculateRoots(a,b,c);
+
+        alternatives=[
+            "No tiene raíces reales",
+            roots.length ? `x₁ = ${clean(roots[0]+1)} ; x₂ = ${clean(roots.length>1?roots[1]:roots[0]+2)}` : "x = 1",
+            roots.length ? `x₁ = ${clean(roots[0]-1)} ; x₂ = ${clean(roots.length>1?roots[1]:roots[0]-2)}` : "x = -1"
+        ];
+
+    }
+
+
+    if(type==="eje"){
+
+        const xv=-b/(2*a);
+
+        alternatives=[
+            `x = ${clean(xv+1)}`,
+            `x = ${clean(xv-1)}`,
+            `x = ${clean(-xv)}`
+        ];
+
+    }
+
+
+    if(type==="concavidad"){
+
+        alternatives=[
+            a>0 ? "Cóncava hacia abajo" : "Cóncava hacia arriba",
+            "No tiene concavidad",
+            "Es una función lineal"
+        ];
+
+    }
+
+
+    alternatives.forEach(x=>{
+
+        if(x!==correct && !options.includes(x))
+            options.push(x);
+
+    });
+
+
+    while(options.length<4){
+
+        options.push("Ninguna de las anteriores");
+
+    }
+
+
+    options=options.slice(0,4);
+
+    options.sort(()=>Math.random()-.5);
+
+    return options;
+
+}
+
+
+/* TIPOS DE DESAFÍO */
+
+const challengeTypes=[
+    "vértice",
+    "raíces",
+    "eje",
+    "concavidad"
+];
+
+
+/* CREAR FUNCIÓN */
+
+function createFunction(){
+
+    let aChoices;
+
+    if(round<=3){
+
+        levelName.textContent="🟢 Explorador";
+
+        aChoices=[1,-1];
+
+    }else if(round<=7){
+
+        levelName.textContent="🟡 Investigador";
+
+        aChoices=[1,-1,2,-2];
+
+    }else{
+
+        levelName.textContent="🔴 Experto";
+
+        aChoices=[1,-1,0.5,-0.5,2,-2];
+
+    }
+
+
+    const a=
+        aChoices[Math.floor(Math.random()*aChoices.length)];
+
+
+    let b;
+    let c;
+
+
+    /* Funciones preparadas para favorecer raíces sencillas */
+
+    if(round>=4){
+
+        const r1=Math.floor(Math.random()*5)-2;
+        const r2=Math.floor(Math.random()*5)-2;
+
+        b=-a*(r1+r2);
+        c=a*r1*r2;
+
+    }else{
+
+        b=Math.floor(Math.random()*5)-2;
+        c=Math.floor(Math.random()*7)-3;
+
+    }
+
+
+    return {a,b,c};
+
+}
+
+
+/* NUEVO DESAFÍO */
+
+function startRound(){
+
+    roundActive=true;
+
+    feedbackEl.textContent="";
+    feedbackEl.className="feedback";
+
+    explanation.style.display="none";
+
+    nextBtn.style.display="none";
+
+    roundEl.textContent=round;
+
+    progressBar.style.width=
+        `${((round-1)/TOTAL_ROUNDS)*100}%`;
+
+
+    const {a,b,c}=createFunction();
+
+    currentType=
+        challengeTypes[
+            Math.floor(Math.random()*challengeTypes.length)
+        ];
+
+
+    drawParabola(a,b,c);
+
+
+    let correct;
+
+
+    const xv=-b/(2*a);
+
+    const yv=a*xv*xv+b*xv+c;
+
+    const roots=calculateRoots(a,b,c);
+
+
+    if(currentType==="vértice"){
+
+        correct=`(${clean(xv)}, ${clean(yv)})`;
+
+        questionEl.textContent=
+            "🕵️ Identifica las coordenadas del VÉRTICE.";
+
+        explanationText.innerHTML=
+            `El vértice se obtiene mediante 
+            <strong>x = -b/(2a)</strong>.
+            Luego sustituimos ese valor de x en la función
+            para obtener y.`;
+
+    }
+
+
+    if(currentType==="raíces"){
+
+        correct=formatRoots(roots);
+
+        questionEl.textContent=
+            "🔎 Encuentra las RAÍCES de la función.";
+
+        explanationText.innerHTML=
+            `Las raíces son los puntos donde la parábola
+            corta el eje X. Se obtienen resolviendo
+            <strong>f(x)=0</strong>.
+            Podemos utilizar la fórmula cuadrática.`;
+
+    }
+
+
+    if(currentType==="eje"){
+
+        correct=`x = ${clean(xv)}`;
+
+        questionEl.textContent=
+            "📐 Determina el EJE DE SIMETRÍA.";
+
+        explanationText.innerHTML=
+            `El eje de simetría pasa exactamente por el vértice.
+            Por eso su ecuación es
+            <strong>x = -b/(2a)</strong>.`;
+
+    }
+
+
+    if(currentType==="concavidad"){
+
+        correct=
+            a>0
+            ? "Cóncava hacia arriba"
+            : "Cóncava hacia abajo";
+
+        questionEl.textContent=
+            "↕️ ¿Hacia dónde se abre la parábola?";
+
+        explanationText.innerHTML=
+            `Observa el coeficiente <strong>a</strong>.
+            Si <strong>a &gt; 0</strong>, la parábola abre hacia arriba.
+            Si <strong>a &lt; 0</strong>, abre hacia abajo.`;
+
+    }
+
+
+    currentAnswer=correct;
+
+
+    const options=
+        generateOptions(correct,currentType,a,b,c);
+
+
+    optionsContainer.innerHTML="";
+
+
+    options.forEach((option,index)=>{
+
+        const button=
+            document.createElement("button");
+
+        button.className="btn-option";
+
+        button.textContent=option;
+
+        button.onclick=()=>selectOption(
+            option,
+            button,
+            correct
+        );
+
+        optionsContainer.appendChild(button);
+
+    });
+
+}
+
+
+/* RESPONDER */
+
+function selectOption(selected,button,correct){
+
+    if(!roundActive) return;
+
+    roundActive=false;
+
+
+    const buttons=
+        optionsContainer.children;
+
+
+    /*
+       PRIMERO MOSTRAMOS LA EXPLICACIÓN.
+       LA RESPUESTA CORRECTA NO SE MARCA TODAVÍA.
+    */
+
+    explanation.style.display="block";
+
+
+    if(selected===correct){
+
+        score+=2;
+
+        feedbackEl.textContent=
+            "✔️ ¡Respuesta correcta!";
+
+        feedbackEl.className="feedback correct";
+
+        button.classList.add("correct");
+
+    }else{
+
+        score-=1;
+
+        button.classList.add("incorrect");
+
+        feedbackEl.textContent=
+            "❌ Necesitamos investigar un poco más.";
+
+        feedbackEl.className="feedback incorrect";
+
+    }
+
+
+    scoreEl.textContent=score;
+
+
+    for(let btn of buttons)
+        btn.disabled=true;
+
+
+    /*
+       Después de la explicación,
+       revelamos cuál era la respuesta.
+    */
+
+    setTimeout(()=>{
+
+        for(let btn of buttons){
+
+            if(btn.textContent===correct)
+                btn.classList.add("correct");
+
+        }
+
+        if(selected!==correct){
+
+            feedbackEl.textContent=
+                `❌ La respuesta correcta era: ${correct}`;
+
+        }
+
+        nextBtn.style.display="inline-block";
+
+    },1200);
+
+}
+
+
+/* SIGUIENTE */
+
+nextBtn.onclick=()=>{
+
+    round++;
+
+    if(round>TOTAL_ROUNDS){
+
+        finishGame();
+
+    }else{
+
+        startRound();
+
+    }
+
+};
+
+
+/* FINAL */
+
+function finishGame(){
+
+    game.style.display="none";
+
+    result.style.display="block";
+
+    document.getElementById("finalScore").textContent=
+        score;
+
+
+    let message;
+
+
+    if(score>=17){
+
+        message=
+            "🏆 ¡Nivel experto! Dominas las funciones cuadráticas.";
+
+    }else if(score>=10){
+
+        message=
+            "🥇 Muy buen trabajo. Ya eres un gran investigador gráfico.";
+
+    }else if(score>=5){
+
+        message=
+            "🥈 Vas por buen camino. Sigue investigando las parábolas.";
+
+    }else{
+
+        message=
+            "📚 La investigación continúa. Repasa vértice, raíces y concavidad.";
+
+    }
+
+
+    document.getElementById("finalMessage").textContent=
+        message;
+
+}
+
+
+/* REINICIAR */
+
+function restartGame(){
+
+    score=0;
+
+    round=1;
+
+    scoreEl.textContent=0;
+
+    game.style.display="block";
+
+    result.style.display="none";
+
+    startRound();
+
+}
+
+
+/* INICIAR */
+
+startRound();
+
+</script>
+
+</body>
+</html>
+```
