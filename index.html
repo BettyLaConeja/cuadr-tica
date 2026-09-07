@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -105,7 +104,20 @@ canvas {
     border: 2px solid #cbd5e1;
     border-radius: 10px;
     background: white;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
+}
+
+/* ECUACIÓN Y VISUALIZACIÓN */
+.equation-container {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #0369a1;
+    display: none;
 }
 
 .options-grid {
@@ -285,6 +297,8 @@ button.restart {
 
         <canvas id="graphCanvas" width="400" height="400"></canvas>
 
+        <div id="equationContainer" class="equation-container"></div>
+
         <div class="options-grid" id="optionsContainer"></div>
 
         <div id="feedback" class="feedback"></div>
@@ -331,41 +345,19 @@ button.restart {
 const canvas = document.getElementById("graphCanvas");
 const ctx = canvas.getContext("2d");
 
-const optionsContainer =
-    document.getElementById("optionsContainer");
-
-const feedbackEl =
-    document.getElementById("feedback");
-
-const explanation =
-    document.getElementById("explanation");
-
-const explanationText =
-    document.getElementById("explanationText");
-
-const nextBtn =
-    document.getElementById("nextBtn");
-
-const scoreEl =
-    document.getElementById("score");
-
-const roundEl =
-    document.getElementById("round");
-
-const levelName =
-    document.getElementById("levelName");
-
-const progressBar =
-    document.getElementById("progressBar");
-
-const questionEl =
-    document.getElementById("question");
-
-const game =
-    document.getElementById("game");
-
-const result =
-    document.getElementById("result");
+const optionsContainer = document.getElementById("optionsContainer");
+const feedbackEl = document.getElementById("feedback");
+const explanation = document.getElementById("explanation");
+const explanationText = document.getElementById("explanationText");
+const nextBtn = document.getElementById("nextBtn");
+const scoreEl = document.getElementById("score");
+const roundEl = document.getElementById("round");
+const levelName = document.getElementById("levelName");
+const progressBar = document.getElementById("progressBar");
+const questionEl = document.getElementById("question");
+const equationContainer = document.getElementById("equationContainer");
+const game = document.getElementById("game");
+const result = document.getElementById("result");
 
 
 /* CONFIGURACIÓN */
@@ -400,25 +392,20 @@ function drawGrid() {
     ctx.lineWidth = 1;
 
     for(let x=0;x<=width;x+=scale){
-
         ctx.beginPath();
         ctx.moveTo(x,0);
         ctx.lineTo(x,height);
         ctx.stroke();
-
     }
 
     for(let y=0;y<=height;y+=scale){
-
         ctx.beginPath();
         ctx.moveTo(0,y);
         ctx.lineTo(width,y);
         ctx.stroke();
-
     }
 
     /* EJE X */
-
     ctx.strokeStyle="#64748b";
     ctx.lineWidth=2;
 
@@ -428,27 +415,22 @@ function drawGrid() {
     ctx.stroke();
 
     /* EJE Y */
-
     ctx.beginPath();
     ctx.moveTo(originX,0);
     ctx.lineTo(originX,height);
     ctx.stroke();
 
     /* NUMERACIÓN */
-
     ctx.fillStyle="#64748b";
     ctx.font="11px Arial";
 
     for(let i=-10;i<=10;i++){
-
         if(i===0) continue;
 
         let px=originX+i*scale;
-
         ctx.fillText(i,px-4,originY+15);
 
         let py=originY-i*scale;
-
         if(py>10 && py<height-5)
             ctx.fillText(i,originX+5,py+4);
     }
@@ -458,7 +440,7 @@ function drawGrid() {
 
 /* DIBUJAR PARÁBOLA */
 
-function drawParabola(a,b,c){
+function drawParabola(a, b, c, showVertex = true){
 
     drawGrid();
 
@@ -472,26 +454,19 @@ function drawParabola(a,b,c){
     for(let pixelX=0;pixelX<=width;pixelX+=2){
 
         const x=(pixelX-originX)/scale;
-
         const y=a*x*x+b*x+c;
-
         const pixelY=originY-y*scale;
 
         if(pixelY < -1000 || pixelY > 1000){
-
             first=true;
             continue;
         }
 
         if(first){
-
             ctx.moveTo(pixelX,pixelY);
             first=false;
-
         }else{
-
             ctx.lineTo(pixelX,pixelY);
-
         }
 
     }
@@ -499,30 +474,32 @@ function drawParabola(a,b,c){
     ctx.stroke();
 
 
-    /* VÉRTICE */
+    /* VÉRTICE (se oculta si la pregunta exige hallarlo) */
 
-    const xv=-b/(2*a);
-    const yv=a*xv*xv+b*xv+c;
+    if (showVertex) {
+        const xv=-b/(2*a);
+        const yv=a*xv*xv+b*xv+c;
 
-    const vx=originX+xv*scale;
-    const vy=originY-yv*scale;
+        const vx=originX+xv*scale;
+        const vy=originY-yv*scale;
 
-    if(vx>=0 && vx<=width && vy>=0 && vy<=height){
+        if(vx>=0 && vx<=width && vy>=0 && vy<=height){
 
-        ctx.fillStyle="#dc2626";
+            ctx.fillStyle="#dc2626";
 
-        ctx.beginPath();
-        ctx.arc(vx,vy,5,0,Math.PI*2);
-        ctx.fill();
+            ctx.beginPath();
+            ctx.arc(vx,vy,5,0,Math.PI*2);
+            ctx.fill();
 
-        ctx.fillStyle="#991b1b";
-        ctx.font="bold 12px Arial";
+            ctx.fillStyle="#991b1b";
+            ctx.font="bold 12px Arial";
 
-        ctx.fillText(
-            `V(${clean(xv)}, ${clean(yv)})`,
-            vx+8,
-            vy-8
-        );
+            ctx.fillText(
+                `V(${clean(xv)}, ${clean(yv)})`,
+                vx+8,
+                vy-8
+            );
+        }
     }
 
 }
@@ -531,9 +508,7 @@ function drawParabola(a,b,c){
 /* LIMPIAR DECIMALES */
 
 function clean(n){
-
     return Math.round(n*100)/100;
-
 }
 
 
@@ -607,26 +582,21 @@ function formatRoots(roots){
 function generateOptions(correct, type, a,b,c){
 
     let options=[correct];
-
     let alternatives=[];
 
-
     if(type==="vértice"){
-
         const xv=-b/(2*a);
         const yv=a*xv*xv+b*xv+c;
 
         alternatives=[
+            `(${clean(yv)}, ${clean(xv)})`, // Coordenadas invertidas
             `(${clean(xv+1)}, ${clean(yv)})`,
             `(${clean(xv)}, ${clean(yv+1)})`,
             `(${clean(-xv)}, ${clean(yv)})`
         ];
-
     }
 
-
     if(type==="raíces"){
-
         const roots=calculateRoots(a,b,c);
 
         alternatives=[
@@ -634,12 +604,9 @@ function generateOptions(correct, type, a,b,c){
             roots.length ? `x₁ = ${clean(roots[0]+1)} ; x₂ = ${clean(roots.length>1?roots[1]:roots[0]+2)}` : "x = 1",
             roots.length ? `x₁ = ${clean(roots[0]-1)} ; x₂ = ${clean(roots.length>1?roots[1]:roots[0]-2)}` : "x = -1"
         ];
-
     }
 
-
     if(type==="eje"){
-
         const xv=-b/(2*a);
 
         alternatives=[
@@ -647,38 +614,26 @@ function generateOptions(correct, type, a,b,c){
             `x = ${clean(xv-1)}`,
             `x = ${clean(-xv)}`
         ];
-
     }
 
-
     if(type==="concavidad"){
-
         alternatives=[
             a>0 ? "Cóncava hacia abajo" : "Cóncava hacia arriba",
             "No tiene concavidad",
             "Es una función lineal"
         ];
-
     }
-
 
     alternatives.forEach(x=>{
-
         if(x!==correct && !options.includes(x))
             options.push(x);
-
     });
 
-
     while(options.length<4){
-
         options.push("Ninguna de las anteriores");
-
     }
 
-
     options=options.slice(0,4);
-
     options.sort(()=>Math.random()-.5);
 
     return options;
@@ -703,51 +658,24 @@ function createFunction(){
     let aChoices;
 
     if(round<=3){
-
         levelName.textContent="🟢 Explorador";
-
         aChoices=[1,-1];
-
     }else if(round<=7){
-
         levelName.textContent="🟡 Investigador";
-
         aChoices=[1,-1,2,-2];
-
     }else{
-
         levelName.textContent="🔴 Experto";
-
         aChoices=[1,-1,0.5,-0.5,2,-2];
-
     }
 
+    const a = aChoices[Math.floor(Math.random()*aChoices.length)];
 
-    const a=
-        aChoices[Math.floor(Math.random()*aChoices.length)];
+    /* Generación de parábolas con raíces enteras comprensibles */
+    const r1 = Math.floor(Math.random() * 9) - 4;
+    const r2 = Math.floor(Math.random() * 9) - 4;
 
-
-    let b;
-    let c;
-
-
-    /* Funciones preparadas para favorecer raíces sencillas */
-
-    if(round>=4){
-
-        const r1=Math.floor(Math.random()*5)-2;
-        const r2=Math.floor(Math.random()*5)-2;
-
-        b=-a*(r1+r2);
-        c=a*r1*r2;
-
-    }else{
-
-        b=Math.floor(Math.random()*5)-2;
-        c=Math.floor(Math.random()*7)-3;
-
-    }
-
+    const b = -a * (r1 + r2);
+    const c = a * r1 * r2;
 
     return {a,b,c};
 
@@ -764,38 +692,33 @@ function startRound(){
     feedbackEl.className="feedback";
 
     explanation.style.display="none";
-
     nextBtn.style.display="none";
 
     roundEl.textContent=round;
-
-    progressBar.style.width=
-        `${((round-1)/TOTAL_ROUNDS)*100}%`;
-
+    progressBar.style.width=`${((round-1)/TOTAL_ROUNDS)*100}%`;
 
     const {a,b,c}=createFunction();
+
+    // Mostrar ecuación
+    equationContainer.textContent = formatEquation(a, b, c);
+    equationContainer.style.display = "block";
 
     currentType=
         challengeTypes[
             Math.floor(Math.random()*challengeTypes.length)
         ];
 
-
-    drawParabola(a,b,c);
-
+    // Se oculta el vértice marcado si la pregunta es hallar el vértice
+    const showVertex = (currentType !== "vértice");
+    drawParabola(a, b, c, showVertex);
 
     let correct;
 
-
     const xv=-b/(2*a);
-
     const yv=a*xv*xv+b*xv+c;
-
     const roots=calculateRoots(a,b,c);
 
-
     if(currentType==="vértice"){
-
         correct=`(${clean(xv)}, ${clean(yv)})`;
 
         questionEl.textContent=
@@ -806,12 +729,9 @@ function startRound(){
             <strong>x = -b/(2a)</strong>.
             Luego sustituimos ese valor de x en la función
             para obtener y.`;
-
     }
 
-
     if(currentType==="raíces"){
-
         correct=formatRoots(roots);
 
         questionEl.textContent=
@@ -821,28 +741,23 @@ function startRound(){
             `Las raíces son los puntos donde la parábola
             corta el eje X. Se obtienen resolviendo
             <strong>f(x)=0</strong>.
-            Podemos utilizar la fórmula cuadrática.`;
-
+            Podemos utilizar la fórmula cuadrática o factorización.`;
     }
 
-
     if(currentType==="eje"){
-
         correct=`x = ${clean(xv)}`;
 
         questionEl.textContent=
             "📐 Determina el EJE DE SIMETRÍA.";
 
         explanationText.innerHTML=
-            `El eje de simetría pasa exactamente por el vértice.
+            `El eje de simetría es una recta vertical paralela al eje Y
+            que pasa exactamente por el vértice de la parábola.
             Por eso su ecuación es
             <strong>x = -b/(2a)</strong>.`;
-
     }
 
-
     if(currentType==="concavidad"){
-
         correct=
             a>0
             ? "Cóncava hacia arriba"
@@ -852,30 +767,20 @@ function startRound(){
             "↕️ ¿Hacia dónde se abre la parábola?";
 
         explanationText.innerHTML=
-            `Observa el coeficiente <strong>a</strong>.
+            `Observa el coeficiente <strong>a</strong> de la ecuación.
             Si <strong>a &gt; 0</strong>, la parábola abre hacia arriba.
             Si <strong>a &lt; 0</strong>, abre hacia abajo.`;
-
     }
-
 
     currentAnswer=correct;
 
-
-    const options=
-        generateOptions(correct,currentType,a,b,c);
-
+    const options=generateOptions(correct,currentType,a,b,c);
 
     optionsContainer.innerHTML="";
 
-
-    options.forEach((option,index)=>{
-
-        const button=
-            document.createElement("button");
-
+    options.forEach((option)=>{
+        const button=document.createElement("button");
         button.className="btn-option";
-
         button.textContent=option;
 
         button.onclick=()=>selectOption(
@@ -885,7 +790,6 @@ function startRound(){
         );
 
         optionsContainer.appendChild(button);
-
     });
 
 }
@@ -899,74 +803,38 @@ function selectOption(selected,button,correct){
 
     roundActive=false;
 
-
-    const buttons=
-        optionsContainer.children;
-
-
-    /*
-       PRIMERO MOSTRAMOS LA EXPLICACIÓN.
-       LA RESPUESTA CORRECTA NO SE MARCA TODAVÍA.
-    */
+    const buttons=optionsContainer.children;
 
     explanation.style.display="block";
 
-
     if(selected===correct){
-
         score+=2;
-
-        feedbackEl.textContent=
-            "✔️ ¡Respuesta correcta!";
-
+        feedbackEl.textContent="✔️ ¡Respuesta correcta!";
         feedbackEl.className="feedback correct";
-
         button.classList.add("correct");
-
     }else{
-
         score-=1;
-
         button.classList.add("incorrect");
-
-        feedbackEl.textContent=
-            "❌ Necesitamos investigar un poco más.";
-
+        feedbackEl.textContent="❌ Necesitamos investigar un poco más.";
         feedbackEl.className="feedback incorrect";
-
     }
 
-
     scoreEl.textContent=score;
-
 
     for(let btn of buttons)
         btn.disabled=true;
 
-
-    /*
-       Después de la explicación,
-       revelamos cuál era la respuesta.
-    */
-
     setTimeout(()=>{
-
         for(let btn of buttons){
-
             if(btn.textContent===correct)
                 btn.classList.add("correct");
-
         }
 
         if(selected!==correct){
-
-            feedbackEl.textContent=
-                `❌ La respuesta correcta era: ${correct}`;
-
+            feedbackEl.textContent=`❌ La respuesta correcta era: ${correct}`;
         }
 
         nextBtn.style.display="inline-block";
-
     },1200);
 
 }
@@ -975,19 +843,12 @@ function selectOption(selected,button,correct){
 /* SIGUIENTE */
 
 nextBtn.onclick=()=>{
-
     round++;
-
     if(round>TOTAL_ROUNDS){
-
         finishGame();
-
     }else{
-
         startRound();
-
     }
-
 };
 
 
@@ -996,41 +857,23 @@ nextBtn.onclick=()=>{
 function finishGame(){
 
     game.style.display="none";
-
     result.style.display="block";
 
-    document.getElementById("finalScore").textContent=
-        score;
-
+    document.getElementById("finalScore").textContent=score;
 
     let message;
 
-
     if(score>=17){
-
-        message=
-            "🏆 ¡Nivel experto! Dominas las funciones cuadráticas.";
-
+        message="🏆 ¡Nivel experto! Dominas las funciones cuadráticas.";
     }else if(score>=10){
-
-        message=
-            "🥇 Muy buen trabajo. Ya eres un gran investigador gráfico.";
-
+        message="🥇 Muy buen trabajo. Ya eres un gran investigador gráfico.";
     }else if(score>=5){
-
-        message=
-            "🥈 Vas por buen camino. Sigue investigando las parábolas.";
-
+        message="🥈 Vas por buen camino. Sigue investigando las parábolas.";
     }else{
-
-        message=
-            "📚 La investigación continúa. Repasa vértice, raíces y concavidad.";
-
+        message="📚 La investigación continúa. Repasa vértice, raíces, eje y concavidad.";
     }
 
-
-    document.getElementById("finalMessage").textContent=
-        message;
+    document.getElementById("finalMessage").textContent=message;
 
 }
 
@@ -1038,19 +881,12 @@ function finishGame(){
 /* REINICIAR */
 
 function restartGame(){
-
     score=0;
-
     round=1;
-
     scoreEl.textContent=0;
-
     game.style.display="block";
-
     result.style.display="none";
-
     startRound();
-
 }
 
 
@@ -1062,4 +898,3 @@ startRound();
 
 </body>
 </html>
-
